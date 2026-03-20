@@ -1,0 +1,463 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: musicstreamx-postgres
+    environment:
+      POSTGRES_DB: musicstreamx
+      POSTGRES_USER: musicstreamx
+      POSTGRES_PASSWORD: musicstreamx123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infrastructure/database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - musicstreamx-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U musicstreamx -d musicstreamx"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: musicstreamx-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - musicstreamx-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # IPFS Node
+  ipfs:
+    image: ipfs/go-ipfs:latest
+    container_name: musicstreamx-ipfs
+    ports:
+      - "4001:4001"  # P2P port
+      - "5001:5001"  # API port
+      - "8080:8080"  # Gateway port
+    volumes:
+      - ipfs_data:/data/ipfs
+    networks:
+      - musicstreamx-network
+    environment:
+      - IPFS_PROFILE=server
+    command: ["ipfs", "daemon", "--migrate=true"]
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./backend/api-gateway
+      dockerfile: Dockerfile
+    container_name: musicstreamx-api-gateway
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DATABASE_URL: postgresql://musicstreamx:musicstreamx123@postgres:5432/musicstreamx
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: your-super-secret-jwt-key-change-in-production
+      STELLAR_NETWORK: testnet
+      STELLAR_CONTRACT_ADDRESS: ${STELLAR_CONTRACT_ADDRESS}
+      FRONTEND_URL: http://localhost:3100
+      IPFS_API_URL: http://ipfs:5001
+      IPFS_GATEWAY_URL: http://ipfs:8080
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      ipfs:
+        condition: service_started
+    networks:
+      - musicstreamx-network
+    volumes:
+      - ./backend/api-gateway:/app
+      - /app/node_modules
+      - uploads:/app/uploads
+    command: npm run dev
+
+  # Music Service
+  music-service:
+    build:
+      context: ./backend/music-service
+      dockerfile: Dockerfile
+    container_name: musicstreamx-music-service
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      DATABASE_URL: postgresql://musicstreamx:musicstreamx123@postgres:5432/musicstreamx
+      REDIS_URL: redis://redis:6379
+      STELLAR_NETWORK: testnet
+      IPFS_API_URL: http://ipfs:5001
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      ipfs:
+        condition: service_started
+    networks:
+      - musicstreamx-network
+    volumes:
+      - ./backend/music-service:/app
+      - /app/node_modules
+    command: npm run dev
+
+  # Streaming Service
+  streaming-service:
+    build:
+      context: ./backend/streaming-service
+      dockerfile: Dockerfile
+    container_name: musicstreamx-streaming-service
+    environment:
+      NODE_ENV: development
+      PORT: 3002
+      DATABASE_URL: postgresql://musicstreamx:musicstreamx123@postgres:5432/musicstreamx
+      REDIS_URL: redis://redis:6379
+      STELLAR_NETWORK: testnet
+      IPFS_GATEWAY_URL: http://ipfs:8080
+    ports:
+      - "3002:3002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      ipfs:
+        condition: service_started
+    networks:
+      - musicstreamx-network
+    volumes:
+      - ./backend/streaming-service:/app
+      - /app/node_modules
+    command: npm run dev
+
+  # NFT Service
+  nft-service:
+    build:
+      context: ./backend/nft-service
+      dockerfile: Dockerfile
+    container_name: musicstreamx-nft-service
+    environment:
+      NODE_ENV: development
+      PORT: 3003
+      DATABASE_URL: postgresql://musicstreamx:musicstreamx123@postgres:5432/musicstreamx
+      REDIS_URL: redis://redis:6379
+      STELLAR_NETWORK: testnet
+      IPFS_API_URL: http://ipfs:5001
+    ports:
+      - "3003:3003"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      ipfs:
+        condition: service_started
+    networks:
+      - musicstreamx-network
+    volumes:
+      - ./backend/nft-service:/app
+      - /app/node_modules
+    command: npm run dev
+
+  # Live Streaming Service
+  live-streaming:
+    build:
+      context: ./backend/live-streaming
+      dockerfile: Dockerfile
+    container_name: musicstreamx-live-streaming
+    environment:
+      NODE_ENV: development
+      PORT: 3004
+      DATABASE_URL: postgresql://musicstreamx:musicstreamx123@postgres:5432/musicstreamx
+      REDIS_URL: redis://redis:6379
+      STELLAR_NETWORK: testnet
+      WEBRTC_STUN_SERVER: stun:stun.l.google.com:19302
+    ports:
+      - "3004:3004"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - musicstreamx-network
+    volumes:
+      - ./backend/live-streaming:/app
+      - /app/node_modules
+    command: npm run dev
+
+  # Governance Service
+  governance-service:
+    build:
+      context: ./backend/governance-service
+      dockerfile: Dockerfile
+    container_name: musicstreamx-governance-service
+    environment:
+      NODE_ENV: development
+      PORT: 3005
+      DATABASE_URL: postgresql://musicstreamx:musicstreamx123@postgres:5432/musicstreamx
+      REDIS_URL: redis://redis:6379
+      STELLAR_NETWORK: testnet
+    ports:
+      - "3005:3005"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - musicstreamx-network
+    volumes:
+      - ./backend/governance-service:/app
+      - /app/node_modules
+    command: npm run dev
+
+  # Music Player Frontend
+  music-player:
+    build:
+      context: ./frontend/music-player
+      dockerfile: Dockerfile
+    container_name: musicstreamx-music-player
+    environment:
+      NODE_ENV: development
+      VITE_API_URL: http://localhost:3000
+      VITE_STELLAR_NETWORK: testnet
+      VITE_STELLAR_CONTRACT_ADDRESS: ${STELLAR_CONTRACT_ADDRESS}
+      VITE_IPFS_GATEWAY_URL: http://localhost:8080
+    ports:
+      - "3100:3000"
+    depends_on:
+      - api-gateway
+      - ipfs
+    networks:
+      - musicstreamx-network
+    volumes:
+      - ./frontend/music-player:/app
+      - /app/node_modules
+    command: npm run dev
+
+  # Artist Dashboard Frontend
+  artist-dashboard:
+    build:
+      context: ./frontend/artist-dashboard
+      dockerfile: Dockerfile
+    container_name: musicstreamx-artist-dashboard
+    environment:
+      NODE_ENV: development
+      VITE_API_URL: http://localhost:3000
+      VITE_STELLAR_NETWORK: testnet
+      VITE_UPLOAD_URL: http://localhost:3000/api/v1/upload
+    ports:
+      - "3200:3000"
+    depends_on:
+      - api-gateway
+    networks:
+      - musicstreamx-network
+    volumes:
+      - ./frontend/artist-dashboard:/app
+      - /app/node_modules
+    command: npm run dev
+
+  # Fan Portal Frontend
+  fan-portal:
+    build:
+      context: ./frontend/fan-portal
+      dockerfile: Dockerfile
+    container_name: musicstreamx-fan-portal
+    environment:
+      NODE_ENV: development
+      VITE_API_URL: http://localhost:3000
+      VITE_STELLAR_NETWORK: testnet
+      VITE_WEBSOCKET_URL: http://localhost:3000
+    ports:
+      - "3300:3000"
+    depends_on:
+      - api-gateway
+    networks:
+      - musicstreamx-network
+    volumes:
+      - ./frontend/fan-portal:/app
+      - /app/node_modules
+    command: npm run dev
+
+  # NFT Marketplace Frontend
+  nft-marketplace:
+    build:
+      context: ./frontend/nft-marketplace
+      dockerfile: Dockerfile
+    container_name: musicstreamx-nft-marketplace
+    environment:
+      NODE_ENV: development
+      VITE_API_URL: http://localhost:3000
+      VITE_STELLAR_NETWORK: testnet
+      VITE_IPFS_GATEWAY_URL: http://localhost:8080
+    ports:
+      - "3400:3000"
+    depends_on:
+      - api-gateway
+      - ipfs
+    networks:
+      - musicstreamx-network
+    volumes:
+      - ./frontend/nft-marketplace:/app
+      - /app/node_modules
+    command: npm run dev
+
+  # Live Events Frontend
+  live-events:
+    build:
+      context: ./frontend/live-events
+      dockerfile: Dockerfile
+    container_name: musicstreamx-live-events
+    environment:
+      NODE_ENV: development
+      VITE_API_URL: http://localhost:3000
+      VITE_WEBRTC_URL: http://localhost:3004
+      VITE_STELLAR_NETWORK: testnet
+    ports:
+      - "3500:3000"
+    depends_on:
+      - api-gateway
+      - live-streaming
+    networks:
+      - musicstreamx-network
+    volumes:
+      - ./frontend/live-events:/app
+      - /app/node_modules
+    command: npm run dev
+
+  # Governance UI Frontend
+  governance-ui:
+    build:
+      context: ./frontend/governance-ui
+      dockerfile: Dockerfile
+    container_name: musicstreamx-governance-ui
+    environment:
+      NODE_ENV: development
+      VITE_API_URL: http://localhost:3000
+      VITE_STELLAR_NETWORK: testnet
+      VITE_GOVERNANCE_CONTRACT: ${GOVERNANCE_CONTRACT}
+    ports:
+      - "3600:3000"
+    depends_on:
+      - api-gateway
+      - governance-service
+    networks:
+      - musicstreamx-network
+    volumes:
+      - ./frontend/governance-ui:/app
+      - /app/node_modules
+    command: npm run dev
+
+  # Stellar Testnet (for development)
+  stellar-testnet:
+    image: stellar/stellar-core:latest
+    container_name: musicstreamx-stellar-testnet
+    ports:
+      - "11626:11626"
+      - "8000:8000"
+    volumes:
+      - stellar_data:/data
+    networks:
+      - musicstreamx-network
+    command:
+      - '--conf /stellar-core/etc/stellar-core.cfg'
+      - '--database /data/stellar-core.db'
+      - '--http-port 8000'
+      - '--public-http-port 11626'
+      - '--network-passphrase "Standalone Network ; February 2017"'
+      - '--force-scp'
+
+  # Prometheus Monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: musicstreamx-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infrastructure/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    networks:
+      - musicstreamx-network
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+
+  # Grafana Dashboard
+  grafana:
+    image: grafana/grafana:latest
+    container_name: musicstreamx-grafana
+    ports:
+      - "9091:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_INSTALL_PLUGINS: grafana-clock-panel,grafana-simple-json-datasource
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infrastructure/grafana/provisioning:/etc/grafana/provisioning
+    networks:
+      - musicstreamx-network
+    depends_on:
+      - prometheus
+
+  # Nginx Load Balancer
+  nginx:
+    image: nginx:alpine
+    container_name: musicstreamx-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infrastructure/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./infrastructure/ssl:/etc/nginx/ssl
+    depends_on:
+      - music-player
+      - artist-dashboard
+      - fan-portal
+      - nft-marketplace
+      - live-events
+      - governance-ui
+    networks:
+      - musicstreamx-network
+    command: nginx -g 'daemon off;'
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  ipfs_data:
+    driver: local
+  stellar_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  uploads:
+    driver: local
+
+networks:
+  musicstreamx-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.23.0.0/16

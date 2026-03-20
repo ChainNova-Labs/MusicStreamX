@@ -1,0 +1,22 @@
+[package]
+name = "musicstreamx-shared"
+version = "1.0.0"
+edition = "2021"
+description = "Shared types and utilities for MusicStreamX smart contracts"
+authors = ["MusicStreamX Team <team@musicstreamx.io>"]
+license = "MIT"
+repository = "https://github.com/ChainNova-Labs/MusicStreamX"
+homepage = "https://musicstreamx.io"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+soroban-sdk = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+sha2 = { workspace = true }
+hex = { workspace = true }
+
+[dev-dependencies]
+soroban-sdk = { workspace = true, features = ["testutils"] }

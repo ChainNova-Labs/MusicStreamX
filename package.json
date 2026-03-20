@@ -1,0 +1,85 @@
+{
+  "name": "musicstreamx",
+  "version": "1.0.0",
+  "description": "Artist-Owned Music Platform on Stellar Blockchain",
+  "main": "index.js",
+  "scripts": {
+    "setup:dev": "npm install && npm run install:contracts && npm run install:backend && npm run install:frontend",
+    "install:contracts": "cd contracts && cargo build",
+    "install:backend": "cd backend && npm install",
+    "install:frontend": "cd frontend && npm install",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build": "npm run build:contracts && npm run build:backend && npm run build:frontend",
+    "build:contracts": "cd contracts && cargo build --release",
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd frontend && npm run build",
+    "test": "npm run test:contracts && npm run test:backend && npm run test:frontend",
+    "test:contracts": "cd contracts && cargo test",
+    "test:backend": "cd backend && npm run test",
+    "test:frontend": "cd frontend && npm run test",
+    "test:coverage": "npm run test:contracts && npm run test:backend -- --coverage && npm run test:frontend -- --coverage",
+    "test:e2e": "cd tests/e2e && npm run test",
+    "test:performance": "cd tests/performance && k6 run --out json=results.json load-test.js",
+    "lint": "npm run lint:contracts && npm run lint:backend && npm run lint:frontend",
+    "lint:contracts": "cd contracts && cargo fmt --check && cargo clippy -- -D warnings",
+    "lint:backend": "cd backend && npm run lint",
+    "lint:frontend": "cd frontend && npm run lint",
+    "format": "npm run format:contracts && npm run format:backend && npm run format:frontend",
+    "format:contracts": "cd contracts && cargo fmt",
+    "format:backend": "cd backend && npm run format",
+    "format:frontend": "cd frontend && npm run format",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "docker:build": "docker-compose build",
+    "deploy:staging": "./scripts/deploy.sh --env staging",
+    "deploy:production": "./scripts/deploy.sh --env production",
+    "clean": "npm run clean:contracts && npm run clean:backend && npm run clean:frontend",
+    "clean:contracts": "cd contracts && cargo clean",
+    "clean:backend": "cd backend && rm -rf node_modules dist",
+    "clean:frontend": "cd frontend && rm -rf node_modules dist",
+    "ipfs:start": "ipfs daemon",
+    "ipfs:add": "ipfs add -r storage/",
+    "music:encode": "cd scripts && ./encode-music.sh",
+    "music:validate": "cd scripts && ./validate-music.sh"
+  },
+  "workspaces": [
+    "backend/*",
+    "frontend/*"
+  ],
+  "keywords": [
+    "music-streaming",
+    "web3",
+    "stellar",
+    "soroban",
+    "nft",
+    "artist-ownership",
+    "blockchain",
+    "decentralized",
+    "music-nft",
+    "fan-tokens",
+    "live-streaming"
+  ],
+  "author": "MusicStreamX Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ChainNova-Labs/MusicStreamX.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ChainNova-Labs/MusicStreamX/issues"
+  },
+  "homepage": "https://github.com/ChainNova-Labs/MusicStreamX#readme",
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "husky": "^8.0.3",
+    "lint-staged": "^15.2.0",
+    "prettier": "^3.1.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  }
+}

@@ -1,0 +1,25 @@
+[workspace]
+members = [
+    "shared",
+    "music-nft",
+    "streaming",
+    "governance",
+    "fan-tokens",
+]
+
+[workspace.dependencies]
+soroban-sdk = "20.0.0"
+serde = "1.0.193"
+serde_json = "1.0.108"
+sha2 = "0.10.8"
+hex = "0.4.3"
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+
+[profile.dev]
+opt-level = 0
+debug = true
