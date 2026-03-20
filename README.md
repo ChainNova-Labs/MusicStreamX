@@ -5,11 +5,7 @@
 [![License](https://img.shields.io/badge/license-MIT-blue)
 [![Stellar](https://img.shields.io/badge/blockchain-Stellar-purple)]
 
-A decentralized music streaming platform built on Stellar blockchain, empowering artists with true ownership of their content and fair revenue distribution.
-
-## 🎯 Project Overview
-
-MusicStreamX revolutionizes the music industry by giving artists complete control over their music, transparent revenue sharing, and direct fan relationships through blockchain technology.
+A decentralized music streaming platform built on Stellar blockchain, empowering artists with true ownership of their content and fair revenue distribution. industry by giving artists complete control over their music, transparent revenue sharing, and direct fan relationships through blockchain technology.
 
 ### 🌟 Core Features
 - **Artist Ownership** - True ownership of music rights through NFTs
@@ -287,3 +283,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 **🎵 Empowering artists, revolutionizing music ownership on Stellar, one stream at a time!**
+=======
+# MusicStreamX
+Artist-Owned Music Platform
+>>>>>>> 4237ebe9fd24bb7e011056cca840b79185054dc2
