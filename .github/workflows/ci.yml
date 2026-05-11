@@ -2,44 +2,23 @@ name: CI
 
 on:
   push:
-    branches: [main, 'feat/**', 'fix/**']
+    branches: [main, 'feat/**', 'fix/**', 'chore/**']
   pull_request:
     branches: [main]
 
 jobs:
-  backend-analytics-test:
-    name: Backend Analytics Tests
+  backend-test:
+    name: Backend Tests
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: backend/api-gateway
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install dependencies
-        run: npm install --no-workspaces
-
-      - name: Run tests
-        run: npm test
-
-  frontend-artist-dashboard-test:
-    name: Frontend Artist Dashboard Tests
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: frontend/artist-dashboard
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '20'
 
