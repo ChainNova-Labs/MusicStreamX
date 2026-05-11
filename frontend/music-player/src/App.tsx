@@ -1,4 +1,3 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { WagmiConfig } from 'wagmi';
@@ -13,7 +12,7 @@ import { FanPortal } from './pages/FanPortal';
 import { NFTMarketplace } from './pages/NFTMarketplace';
 import { LiveEvents } from './pages/LiveEvents';
 import { useThemeStore } from './store/themeStore';
-import { wagmiConfig, rainbowKitTheme } from './utils/walletConfig';
+import { wagmiConfig, rainbowKitTheme, chains } from './utils/walletConfig';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -30,7 +29,7 @@ function App() {
 
   return (
     <WagmiConfig config={wagmiConfig}>
-      <RainbowKitProvider theme={rainbowKitTheme}>
+      <RainbowKitProvider chains={chains} theme={rainbowKitTheme}>
         <QueryClientProvider client={queryClient}>
           <Router>
             <div className={`min-h-screen ${isDarkMode ? 'dark' : 'light'}`}>
@@ -42,7 +41,7 @@ function App() {
               >
                 <Header />
                 <MusicPlayer />
-                
+
                 <main className="container mx-auto px-4 py-8">
                   <Routes>
                     <Route path="/" element={<TrackList />} />

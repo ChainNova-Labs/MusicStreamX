@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 import { useMusicPlayerStore } from '../store/musicPlayerStore';
 import { useWalletStore } from '../store/walletStore';
-import { Track } from '../types/track';
 
 export const MusicPlayer: React.FC = () => {
   const {
@@ -25,8 +24,6 @@ export const MusicPlayer: React.FC = () => {
     duration,
     repeat,
     shuffle,
-    queue,
-    setCurrentTrack,
     setIsPlaying,
     setVolume,
     setProgress,
@@ -36,7 +33,7 @@ export const MusicPlayer: React.FC = () => {
     playPrevious
   } = useMusicPlayerStore();
 
-  const { isConnected, account } = useWalletStore();
+  const { isConnected } = useWalletStore();
   const [showVolume, setShowVolume] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -130,8 +127,7 @@ export const MusicPlayer: React.FC = () => {
           const audio = e.currentTarget;
           setProgress((audio.currentTime / audio.duration) * 100);
         }}
-        onLoadedMetadata={(e) => {
-          const audio = e.currentTarget;
+        onLoadedMetadata={() => {
           // TODO: Update duration
         }}
         onEnded={() => {
