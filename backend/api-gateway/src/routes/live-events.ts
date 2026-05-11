@@ -11,7 +11,7 @@ liveEventsRoutes.get(
     query('page').optional().isInt({ min: 1 }),
     query('limit').optional().isInt({ min: 1, max: 100 }),
   ]),
-  (req: Request, res: Response) => {
+  (_req: Request, res: Response) => {
     res.json({ events: [] });
   }
 );

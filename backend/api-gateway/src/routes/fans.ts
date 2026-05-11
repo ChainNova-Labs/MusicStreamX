@@ -33,7 +33,7 @@ fanRoutes.post(
     param('id').isUUID().withMessage('fan id must be a valid UUID'),
     body('artistId').isUUID().withMessage('artistId must be a valid UUID'),
   ]),
-  (req: Request, res: Response) => {
+  (_req: Request, res: Response) => {
     res.json({ message: 'Artist followed' });
   }
 );

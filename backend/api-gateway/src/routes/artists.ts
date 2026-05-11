@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { body, param, query } from 'express-validator';
 import { validate } from '../middleware/validate';
+import { cacheGet, cacheSet, cacheDel, TTL } from '../services/cacheService';
 
 export const artistRoutes = Router();
 
@@ -67,8 +68,19 @@ artistRoutes.get(
 artistRoutes.get(
   '/:id',
   validate([param('id').isUUID().withMessage('id must be a valid UUID')]),
-  (req: Request, res: Response) => {
-    res.json({ id: req.params.id });
+  async (req: Request, res: Response) => {
+    const key = `artist_profile:${req.params.id}`;
+    const cached = await cacheGet<{ id: string }>(key);
+    if (cached) {
+      res.setHeader('X-Cache', 'HIT');
+      res.json(cached);
+      return;
+    }
+
+    const result = { id: req.params.id };
+    await cacheSet(key, result, TTL.ARTIST_PROFILE);
+    res.setHeader('X-Cache', 'MISS');
+    res.json(result);
   }
 );
 
@@ -86,7 +98,7 @@ artistRoutes.post(
   }
 );
 
-// PUT /api/v1/artists/:id
+// PUT /api/v1/artists/:id — invalidate profile cache on update
 artistRoutes.put(
   '/:id',
   validate([
@@ -94,7 +106,8 @@ artistRoutes.put(
     body('name').optional().trim().isLength({ max: 100 }),
     body('bio').optional().trim().isLength({ max: 1000 }),
   ]),
-  (req: Request, res: Response) => {
+  async (req: Request, res: Response) => {
+    await cacheDel(`artist_profile:${req.params.id}`);
     res.json({ message: 'Artist updated', id: req.params.id });
   }
 );

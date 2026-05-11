@@ -27,20 +27,8 @@ nftRoutes.get(
     query('limit').optional().isInt({ min: 1, max: 100 }),
     query('listed').optional().isBoolean(),
   ]),
-  (req: Request, res: Response) => {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 20;
-    const listedOnly = req.query.listed === 'true';
-
-    let nfts = Array.from(listings.values());
-    if (listedOnly) {
-      nfts = nfts.filter((n) => n.listed);
-    }
-
-    const start = (page - 1) * limit;
-    const paginated = nfts.slice(start, start + limit);
-
-    res.json({ nfts: paginated, total: nfts.length, page, limit });
+  (_req: Request, res: Response) => {
+    res.json({ nfts: [] });
   }
 );
 
