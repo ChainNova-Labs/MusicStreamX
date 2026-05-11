@@ -5,5 +5,5 @@ module.exports = {
   roots: ['<rootDir>/src'],
   testMatch: ['**/__tests__/**/*.test.ts'],
   moduleNameMapper: { '^@/(.*)$': '<rootDir>/src/$1' },
-  passWithNoTests: true,
+  collectCoverageFrom: ['src/**/*.ts', '!src/index.ts'],
 };

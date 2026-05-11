@@ -17,34 +17,32 @@ artistRoutes.get(
   }
 );
 
-// GET /api/v1/artists/:id/analytics — royalty analytics (cached)
+// GET /api/v1/artists/:id/analytics — royalty analytics dashboard data
 artistRoutes.get(
   '/:id/analytics',
   validate([param('id').isUUID().withMessage('id must be a valid UUID')]),
-  async (req: Request, res: Response) => {
-    const key = `artist_analytics:${req.params.id}`;
-    const cached = await cacheGet<object>(key);
-    if (cached) {
-      res.setHeader('X-Cache', 'HIT');
-      res.json(cached);
-      return;
-    }
-
+  (req: Request, res: Response) => {
+    // Generate 30-day demo data; replace with real DB queries in production
     const today = new Date();
     const streamHistory = Array.from({ length: 30 }, (_, i) => {
       const d = new Date(today);
       d.setDate(d.getDate() - (29 - i));
-      return { date: d.toISOString().slice(0, 10), streams: Math.floor(Math.random() * 500) + 50 };
+      return {
+        date: d.toISOString().slice(0, 10),
+        streams: Math.floor(Math.random() * 500) + 50,
+      };
     });
     const earningsHistory = streamHistory.map((p) => ({
       date: p.date,
       earnings: parseFloat((p.streams * 0.004).toFixed(4)),
     }));
+    const totalStreams = streamHistory.reduce((s, p) => s + p.streams, 0);
+    const totalEarnings = parseFloat(earningsHistory.reduce((s, p) => s + p.earnings, 0).toFixed(4));
 
-    const result = {
+    res.json({
       artistId: req.params.id,
-      totalStreams: streamHistory.reduce((s, p) => s + p.streams, 0),
-      totalEarnings: parseFloat(earningsHistory.reduce((s, p) => s + p.earnings, 0).toFixed(4)),
+      totalStreams,
+      totalEarnings,
       streamHistory,
       earningsHistory,
       topTracks: [
@@ -62,15 +60,11 @@ artistRoutes.get(
         { country: 'Japan', listeners: 840, percentage: 7.0 },
         { country: 'Other', listeners: 3000, percentage: 25.0 },
       ],
-    };
-
-    await cacheSet(key, result, TTL.ARTIST_PROFILE);
-    res.setHeader('X-Cache', 'MISS');
-    res.json(result);
+    });
   }
 );
 
-// GET /api/v1/artists/:id — artist profile (cached)
+// GET /api/v1/artists/:id
 artistRoutes.get(
   '/:id',
   validate([param('id').isUUID().withMessage('id must be a valid UUID')]),
