@@ -1,0 +1,79 @@
+name: Deploy to Staging
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ${{ github.repository_owner }}/musicstreamx
+
+jobs:
+  deploy-staging:
+    name: Deploy ${{ github.ref_name }} to Staging
+    runs-on: ubuntu-latest
+    environment: staging
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push release images
+        uses: docker/build-push-action@v5
+        with:
+          context: backend/api-gateway
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-api-gateway:${{ github.ref_name }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-api-gateway:staging
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Write staging .env
+        run: |
+          cat > .env.staging <<EOF
+          NODE_ENV=staging
+          IMAGE_TAG=${{ github.ref_name }}
+          REGISTRY=${{ env.REGISTRY }}
+          IMAGE_PREFIX=${{ env.IMAGE_PREFIX }}
+          DATABASE_URL=${{ secrets.STAGING_DATABASE_URL }}
+          REDIS_URL=${{ secrets.STAGING_REDIS_URL }}
+          JWT_SECRET=${{ secrets.STAGING_JWT_SECRET }}
+          STELLAR_NETWORK=testnet
+          STELLAR_HORIZON_URL=https://horizon-testnet.stellar.org
+          STELLAR_CONTRACT_ADDRESS=${{ secrets.STAGING_STELLAR_CONTRACT_ADDRESS }}
+          IPFS_API_URL=${{ secrets.STAGING_IPFS_API_URL }}
+          IPFS_GATEWAY_URL=${{ secrets.STAGING_IPFS_GATEWAY_URL }}
+          EOF
+
+      - name: Deploy to staging via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          script: |
+            cd /opt/musicstreamx
+            echo "Deploying ${{ github.ref_name }} to staging..."
+            docker compose pull
+            docker compose up -d --remove-orphans
+            docker system prune -f
+            echo "Deployment complete: ${{ github.ref_name }}"
+
+      - name: Notify deployment
+        if: always()
+        run: |
+          echo "Staging deployment of ${{ github.ref_name }} finished with status: ${{ job.status }}"
