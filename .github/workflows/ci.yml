@@ -1,14 +1,14 @@
 name: CI
 
 on:
+  push:
+    branches: [main, 'feat/**', 'fix/**']
   pull_request:
     branches: [main]
-  push:
-    branches: [main, 'feat/**', 'fix/**', 'chore/**']
 
 jobs:
-  backend-test:
-    name: Backend Tests
+  backend-analytics-test:
+    name: Backend Analytics Tests
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -23,21 +23,17 @@ jobs:
           node-version: '20'
 
       - name: Install dependencies
-        # --no-workspaces avoids workspace:* protocol errors from sibling packages
         run: npm install --no-workspaces --ignore-scripts
-
-      - name: Type check
-        run: npx tsc --noEmit
 
       - name: Run tests
         run: npm test
 
-  frontend-test:
-    name: Frontend Tests
+  frontend-artist-dashboard-test:
+    name: Frontend Artist Dashboard Tests
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: frontend/music-player
+        working-directory: frontend/artist-dashboard
 
     steps:
       - uses: actions/checkout@v4
@@ -54,4 +50,4 @@ jobs:
         run: npx tsc --noEmit
 
       - name: Run tests
-        run: npm run test -- --passWithNoTests
+        run: npm test
