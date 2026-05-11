@@ -35,7 +35,7 @@ const upload = multer({
   limits: {
     fileSize: 100 * 1024 * 1024, // 100MB
   },
-  fileFilter: (req, file, cb) => {
+  fileFilter: (_req, file, cb) => {
     const allowedTypes = ['audio/mpeg', 'audio/wav', 'audio/flac', 'audio/ogg'];
     if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
@@ -81,7 +81,7 @@ app.use(limiter);
 app.use('/uploads', express.static('uploads'));
 
 // Health check endpoint
-app.get('/health', (req, res) => {
+app.get('/health', (_req, res) => {
   res.status(200).json({
     status: 'OK',
     timestamp: new Date().toISOString(),
@@ -98,7 +98,7 @@ app.get('/health', (req, res) => {
 });
 
 // API documentation endpoint
-app.get('/api/v1/docs', (req, res) => {
+app.get('/api/v1/docs', (_req, res) => {
   res.json({
     title: 'MusicStreamX API Gateway',
     version: '1.0.0',

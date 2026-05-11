@@ -12,7 +12,7 @@ governanceRoutes.get(
     query('limit').optional().isInt({ min: 1, max: 100 }),
     query('status').optional().isIn(['active', 'passed', 'rejected']).withMessage('status must be active, passed, or rejected'),
   ]),
-  (req: Request, res: Response) => {
+  (_req: Request, res: Response) => {
     res.json({ proposals: [] });
   }
 );
