@@ -1,12 +1,7 @@
-import { TrackUpload } from './components/TrackUpload';
+import { RoyaltyAnalyticsDashboard } from './pages/RoyaltyAnalyticsDashboard';
 
 function App() {
-  return (
-    <div style={{ fontFamily: 'sans-serif', padding: 24 }}>
-      <h1>🎵 Artist Dashboard</h1>
-      <TrackUpload />
-    </div>
-  );
+  return <RoyaltyAnalyticsDashboard />;
 }
 
 export default App;

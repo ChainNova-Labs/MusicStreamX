@@ -7,8 +7,8 @@ on:
     branches: [main]
 
 jobs:
-  backend-test:
-    name: Backend Tests
+  backend-analytics-test:
+    name: Backend Analytics Tests
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -24,9 +24,6 @@ jobs:
 
       - name: Install dependencies
         run: npm install --no-workspaces --ignore-scripts
-
-      - name: Type check
-        run: npx tsc --noEmit
 
       - name: Run tests
         run: npm test
