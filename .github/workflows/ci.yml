@@ -7,12 +7,33 @@ on:
     branches: [main]
 
 jobs:
-  music-player-test:
-    name: Music Player Tests (Freighter Wallet)
+  backend-analytics-test:
+    name: Backend Analytics Tests
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: frontend/music-player
+        working-directory: backend/api-gateway
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install --no-workspaces --ignore-scripts
+
+      - name: Run tests
+        run: npm test
+
+  frontend-artist-dashboard-test:
+    name: Frontend Artist Dashboard Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend/artist-dashboard
 
     steps:
       - uses: actions/checkout@v4
